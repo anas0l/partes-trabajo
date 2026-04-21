@@ -6,7 +6,6 @@ const pool = new Pool({
 });
 
 async function initDB() {
-    console.log(process.env.DATABASE_URL);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS partes (
       id          SERIAL PRIMARY KEY,
