@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PartesDiarios — Fontanería · Calefacción · Clima</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #185FA5; --blue-light: #E6F1FB; --blue-mid: #378ADD;
+      --teal: #0F6E56; --teal-light: #E1F5EE; --teal-mid: #1D9E75;
+      --amber: #854F0B; --amber-light: #FAEEDA; --amber-mid: #EF9F27;
+      --red: #A32D2D; --red-light: #FCEBEB; --red-mid: #E24B4A;
+      --bg: #f8f8f6; --card: #fff; --border: #e5e4de;
+      --text: #1a1a18; --text-sec: #6b6a66; --text-hint: #999890;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a18; --card: #242422; --border: #38382e;
+        --text: #f0efe8; --text-sec: #a09f98; --text-hint: #666;
+      }
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+    #app { max-width: 820px; margin: 0 auto; padding-bottom: 3rem; }
+
+    /* ── Topbar ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 36px; height: 36px; background: var(--blue);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 20px; height: 20px; fill: white; }
+    .logo-name { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600; }
+    .logo-sub { font-size: 11px; color: var(--text-sec); margin-top: 1px; }
+    .date-badge {
+      font-size: 12px; color: var(--blue); background: var(--blue-light);
+      padding: 4px 12px; border-radius: 20px; font-weight: 500;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; gap: 2px; padding: 0 1.5rem;
+      background: var(--card); border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      padding: 10px 18px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; background: none;
+      color: var(--text-sec); border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s; margin-bottom: -1px;
+      font-family: inherit;
+    }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    /* ── Layout ── */
+    .section { padding: 1.5rem; }
+    .section-label {
+      font-size: 11px; font-weight: 600; color: var(--text-sec);
+      text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.75rem;
+    }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem;
+    }
+
+    /* ── Forms ── */
+    .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+    .form-label { font-size: 12px; color: var(--text-sec); font-weight: 500; }
+    .form-input {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; background: var(--bg); color: var(--text);
+      font-family: inherit; outline: none; transition: border-color 0.15s; width: 100%;
+    }
+    .form-input:focus { border-color: var(--blue-mid); }
+    textarea.form-input { resize: vertical; min-height: 72px; }
+    select.form-input { cursor: pointer; }
+
+    /* ── Tipo buttons ── */
+    .tipo-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tipo-btn {
+      padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--bg); font-size: 13px; font-weight: 500;
+      cursor: pointer; color: var(--text-sec); font-family: inherit;
+      transition: all 0.15s;
+    }
+    .tipo-btn.active { background: var(--blue-light); border-color: var(--blue-mid); color: var(--blue); }
+
+    /* ── Voice ── */
+    .voice-btn {
+      display: flex; align-items: center; gap: 7px; padding: 8px 14px;
+      border-radius: 8px; border: 1px solid var(--border); background: var(--bg);
+      cursor: pointer; font-size: 13px; font-family: inherit; color: var(--text-sec);
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .voice-btn:hover { border-color: var(--blue-mid); color: var(--text); }
+    .voice-btn.recording { background: var(--red-light); border-color: var(--red-mid); color: var(--red); }
+    .voice-waves { display: none; align-items: center; gap: 2px; height: 16px; }
+    .voice-waves span {
+      display: block; width: 3px; background: var(--red); border-radius: 2px;
+      animation: wave 0.6s ease-in-out infinite alternate;
+    }
+    .voice-waves span:nth-child(1) { height: 4px; animation-delay: 0s; }
+    .voice-waves span:nth-child(2) { height: 10px; animation-delay: 0.1s; }
+    .voice-waves span:nth-child(3) { height: 14px; animation-delay: 0.2s; }
+    .voice-waves span:nth-child(4) { height: 8px; animation-delay: 0.3s; }
+    .voice-waves span:nth-child(5) { height: 5px; animation-delay: 0.4s; }
+    @keyframes wave { from { transform: scaleY(0.5); } to { transform: scaleY(1.4); } }
+    .voice-btn.recording .voice-waves { display: flex; }
+    .voice-btn.recording .mic-static { display: none; }
+    .voice-transcript {
+      font-size: 12px; color: var(--text-sec); font-style: italic;
+      padding: 7px 10px; background: var(--bg); border-radius: 7px;
+      border: 1px solid var(--border); margin-top: 7px; display: none;
+    }
+    .voice-transcript.active { display: block; }
+
+    /* ── Timer ── */
+    .timer-display {
+      font-family: 'Space Grotesk', monospace; font-size: 28px;
+      font-weight: 600; letter-spacing: 0.04em;
+    }
+    .timer-running { color: var(--teal); }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      font-family: inherit; cursor: pointer; border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+    .btn-secondary { background: var(--bg); color: var(--text); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+    .btn-primary:hover { background: var(--blue-mid); border-color: var(--blue-mid); }
+    .btn-success { background: var(--teal); color: white; border-color: var(--teal); padding: 10px 28px; font-size: 14px; }
+    .btn-success:hover { background: var(--teal-mid); border-color: var(--teal-mid); }
+    .btn-danger { background: var(--red-light); color: var(--red); border-color: var(--red-mid); font-size: 12px; }
+    .hidden { display: none !important; }
+
+    /* ── Material list ── */
+    .mat-list { list-style: none; display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+    .mat-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 10px; background: var(--bg); border-radius: 7px;
+      border: 1px solid var(--border); font-size: 13px;
+    }
+    .mat-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal-mid); flex-shrink: 0; margin-right: 8px; }
+    .remove-btn {
+      background: none; border: none; cursor: pointer; color: var(--text-hint);
+      font-size: 14px; padding: 2px 5px; border-radius: 4px;
+    }
+    .remove-btn:hover { color: var(--red); background: var(--red-light); }
+
+    /* ── Tag pills ── */
+    .tag {
+      display: inline-flex; align-items: center; font-size: 11px;
+      font-weight: 500; padding: 3px 9px; border-radius: 20px;
+    }
+    .tag-fontaneria { background: var(--blue-light); color: var(--blue); }
+    .tag-calefaccion { background: var(--amber-light); color: var(--amber); }
+    .tag-clima { background: var(--teal-light); color: var(--teal); }
+    .tag-done { background: var(--teal-light); color: var(--teal); }
+    .tag-progress { background: var(--amber-light); color: var(--amber); }
+
+    /* ── Parte cards ── */
+    .parte-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem 1.25rem; margin-bottom: 10px; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .parte-card:hover { border-color: var(--blue-mid); }
+    .parte-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .parte-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+    .parte-meta { font-size: 12px; color: var(--text-sec); }
+    .parte-desc { font-size: 13px; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; }
+    .parte-footer {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      padding-top: 8px; border-top: 1px solid var(--border);
+    }
+    .parte-footer span { font-size: 12px; color: var(--text-sec); }
+    .parte-footer strong { color: var(--text); }
+
+    /* ── Stats ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+    .stat-label { font-size: 12px; color: var(--text-sec); margin-bottom: 4px; }
+    .stat-value { font-size: 24px; font-weight: 500; }
+
+    /* ── Detail ── */
+    .detail-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+    .detail-cell { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
+    .detail-cell-label { font-size: 11px; color: var(--text-sec); margin-bottom: 3px; }
+    .detail-cell-value { font-size: 16px; font-weight: 500; }
+    .detail-section { margin-bottom: 1rem; }
+    .detail-section-title { font-size: 11px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+
+    /* ── Misc ── */
+    .back-btn {
+      display: flex; align-items: center; gap: 5px; background: none; border: none;
+      font-family: inherit; font-size: 13px; color: var(--text-sec); cursor: pointer;
+      padding: 0; margin-bottom: 1rem;
+    }
+    .back-btn:hover { color: var(--text); }
+    .save-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-sec); font-size: 14px; }
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--bg); padding: 10px 20px;
+      border-radius: 20px; font-size: 13px; font-weight: 500;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 100;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+    .loader { text-align: center; padding: 2rem; color: var(--text-sec); font-size: 13px; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-2 8 9-12h-7l2-8z"/></svg>
+      </div>
+      <div>
+        <div class="logo-name">PartesDiarios</div>
+        <div class="logo-sub">Fontanería · Calefacción · Clima</div>
+      </div>
+    </div>
+    <div class="date-badge" id="todayDate"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('nuevo')">Nuevo parte</button>
+    <button class="tab" onclick="switchTab('historial')">Historial</button>
+    <button class="tab" onclick="switchTab('resumen')">Resumen</button>
+  </div>
+
+  <!-- ══ TAB: NUEVO ══ -->
+  <div id="tab-nuevo" class="tab-content active">
+    <div class="section">
+
+      <div class="section-label">Tipo de trabajo</div>
+      <div class="card" style="padding:.85rem 1.25rem 1rem;">
+        <div class="tipo-selector">
+          <button class="tipo-btn active" onclick="setTipo(this,'fontaneria')">Fontanería</button>
+          <button class="tipo-btn" onclick="setTipo(this,'calefaccion')">Calefacción</button>
+          <button class="tipo-btn" onclick="setTipo(this,'clima')">Aire acondicionado</button>
+        </div>
+      </div>
+
+      <div class="section-label">Datos del trabajo</div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cliente *</label>
+            <input class="form-input" id="fCliente" type="text" placeholder="Nombre del cliente">
+          </div>
+          <div class="form-group" style="flex:0 0 120px;min-width:auto;">
+            <label class="form-label">Nº parte</label>
+            <input class="form-input" id="fNumParte" type="text" readonly style="background:var(--border);opacity:.7;">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Dirección</label>
+          <input class="form-input" id="fDireccion" type="text" placeholder="Calle, número, ciudad">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción del trabajo *</label>
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <textarea class="form-input" id="fDescripcion" placeholder="Describe el trabajo realizado..."></textarea>
+            <button class="voice-btn" id="voiceDescBtn" onclick="toggleVoice('fDescripcion','voiceDescBtn')">
+              <span class="mic-static">🎤</span>
+              <div class="voice-waves"><span></span><span></span><span></span><span></span><span></span></div>
+            </button>
+          </div>
+          <div class="voice-transcript" id="transcript-fDescripcion"></div>
+        </div>
+      </div>
+
+      <div class="section-label">Registro horario</div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:3px;">Tiempo transcurrido</div>
+            <div class="timer-display" id="timerDisplay">00:00:00</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="btn btn-secondary" id="btnIniciar" onclick="iniciarTrabajo()">Iniciar ahora</button>
+            <button class="btn btn-secondary hidden" id="btnFinalizar" onclick="finalizarTrabajo()">Finalizar</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Hora inicio</label>
+            <input class="form-input" id="fHoraInicio" type="time">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora fin</label>
+            <input class="form-input" id="fHoraFin" type="time">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha</label>
+            <input class="form-input" id="fFecha" type="date">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Materiales utilizados</div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:var(--text-sec);">Lista de materiales</span>
+          <button class="voice-btn" id="voiceMatBtn" onclick="toggleVoiceMat()" style="padding:5px 12px;font-size:12px;">
+            <span class="mic-static">🎤 Dictar material</span>
+            <div class="voice-waves"><span></span><span></span><span></span><span></span><span></span></div>
+          </button>
+        </div>
+        <div class="voice-transcript" id="transcript-mat"></div>
+        <ul class="mat-list" id="materialList"></ul>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input class="form-input" id="matInput" type="text" placeholder='Ej: Válvula de bola 1/2" x2' style="flex:1;">
+          <button class="btn btn-secondary" onclick="addMaterial()">Añadir</button>
+        </div>
+        <div id="matSugerencias" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Observaciones</label>
+          <textarea class="form-input" id="fObservaciones" rows="2" placeholder="Incidencias, trabajos pendientes..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Operario</label>
+          <input class="form-input" id="fOperario" type="text" placeholder="Nombre del operario">
+        </div>
+      </div>
+
+      <div class="save-row">
+        <button class="btn btn-secondary" onclick="limpiarFormulario()">Limpiar</button>
+        <button class="btn btn-success" id="btnGuardar" onclick="guardarParte()">Guardar parte</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: HISTORIAL ══ -->
+  <div id="tab-historial" class="tab-content">
+    <div class="section">
+      <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+        <input class="form-input" id="searchInput" type="text" placeholder="Buscar cliente, operario..." style="flex:1;min-width:180px;" oninput="buscarHistorial()">
+        <select class="form-input" id="filterTipo" style="width:auto;" onchange="buscarHistorial()">
+          <option value="">Todos los tipos</option>
+          <option value="fontaneria">Fontanería</option>
+          <option value="calefaccion">Calefacción</option>
+          <option value="clima">Aire acondicionado</option>
+        </select>
+        <input class="form-input" id="filterFechaDesde" type="date" style="width:auto;" onchange="buscarHistorial()">
+        <input class="form-input" id="filterFechaHasta" type="date" style="width:auto;" onchange="buscarHistorial()">
+      </div>
+      <div id="historialList"></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: RESUMEN ══ -->
+  <div id="tab-resumen" class="tab-content">
+    <div class="section">
+      <div class="section-label">Estadísticas globales</div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="section-label">Por tipo de trabajo</div>
+      <div id="statsByTipo"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/api.js"></script>
+<script>
+  // ─── Constants ───
+  const TIPOS = {
+    fontaneria: { label: 'Fontanería', cls: 'tag-fontaneria' },
+    calefaccion: { label: 'Calefacción', cls: 'tag-calefaccion' },
+    clima: { label: 'Aire acondicionado', cls: 'tag-clima' },
+  };
+  const SUGERENCIAS = {
+    fontaneria: ['Codo 90° 20mm','Válvula de bola 1/2"','Tubo multicapa','Cinta teflón','Llave de paso','Manómetro'],
+    calefaccion: ['Radiador 10 elem.','Purgador automático','Termostato digital','Válvula termostática','Bomba circuladora','Colector'],
+    clima: ['Filtro de aire','Gas R32 1kg','Tubo cobre 1/4"','Cinta armaflex','Sifón desagüe','Soporte exterior'],
+  };
+
+  // ─── State ───
+  let materials = [];
+  let tipoActual = 'fontaneria';
+  let timerInterval = null;
+  let timerStart = null;
+  let timerRunning = false;
+  let recognition = null;
+  let voiceActive = false;
+  let voiceTarget = null;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  // ─── Init ───
+  function init() {
+    const d = new Date();
+    document.getElementById('todayDate').textContent =
+      d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+    document.getElementById('fFecha').value = d.toISOString().split('T')[0];
+    renderSugerencias();
+    cargarNumParte();
+  }
+
+  async function cargarNumParte() {
+    try {
+      const partes = await api.listar();
+      document.getElementById('fNumParte').value = 'P-' + String(partes.length + 1).padStart(4, '0');
+    } catch { document.getElementById('fNumParte').value = 'P-0001'; }
+  }
+
+  // ─── Tabs ───
+  function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    ['nuevo','historial','resumen'].forEach((n, i) => {
+      if (n === name) document.querySelectorAll('.tab')[i].classList.add('active');
+    });
+    if (name === 'historial') cargarHistorial();
+    if (name === 'resumen') cargarResumen();
+  }
+
+  // ─── Tipo ───
+  function setTipo(btn, tipo) {
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tipoActual = tipo;
+    renderSugerencias();
+  }
+
+  function renderSugerencias() {
+    document.getElementById('matSugerencias').innerHTML =
+      SUGERENCIAS[tipoActual].map(s =>
+        `<button class="tipo-btn" style="font-size:11px;padding:3px 9px;" onclick="addMaterialDirect('${s}')">${s}</button>`
+      ).join('');
+  }
+
+  // ─── Materials ───
+  function addMaterial() {
+    const inp = document.getElementById('matInput');
+    const val = inp.value.trim();
+    if (!val) return;
+    materials.push(val);
+    inp.value = '';
+    renderMaterials();
+  }
+  function addMaterialDirect(name) { materials.push(name); renderMaterials(); }
+  function removeMaterial(i) { materials.splice(i, 1); renderMaterials(); }
+  function renderMaterials() {
+    const ul = document.getElementById('materialList');
+    ul.innerHTML = materials.map((m, i) =>
+      `<li class="mat-item">
+        <span style="display:flex;align-items:center;"><span class="mat-dot"></span>${m}</span>
+        <button class="remove-btn" onclick="removeMaterial(${i})">✕</button>
+      </li>`
+    ).join('');
+  }
+
+  // ─── Timer ───
+  function iniciarTrabajo() {
+    const now = new Date();
+    document.getElementById('fHoraInicio').value =
+      String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    timerStart = now; timerRunning = true;
+    document.getElementById('btnIniciar').classList.add('hidden');
+    document.getElementById('btnFinalizar').classList.remove('hidden');
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+  function finalizarTrabajo() {
+    const now = new Date();
+    document.getElementById('fHoraFin').value =
+      String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    timerRunning = false; clearInterval(timerInterval);
+    document.getElementById('btnFinalizar').classList.add('hidden');
+    document.getElementById('btnIniciar').classList.remove('hidden');
+    document.getElementById('timerDisplay').classList.remove('timer-running');
+  }
+  function updateTimer() {
+    const diff = Math.floor((new Date() - timerStart) / 1000);
+    const h = Math.floor(diff / 3600), m = Math.floor((diff % 3600) / 60), s = diff % 60;
+    document.getElementById('timerDisplay').textContent =
+      String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    document.getElementById('timerDisplay').classList.add('timer-running');
+  }
+  function calcDuracion(ini, fin) {
+    if (!ini || !fin) return '--';
+    const [ih,im] = ini.split(':').map(Number), [fh,fm] = fin.split(':').map(Number);
+    const diff = (fh*60+fm) - (ih*60+im);
+    return diff > 0 ? Math.floor(diff/60) + 'h ' + (diff%60) + 'min' : '--';
+  }
+
+  // ─── Save ───
+  async function guardarParte() {
+    const cliente = document.getElementById('fCliente').value.trim();
+    const descripcion = document.getElementById('fDescripcion').value.trim();
+    if (!cliente) { showToast('⚠ Indica el cliente'); return; }
+    if (!descripcion) { showToast('⚠ Describe el trabajo'); return; }
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+      await api.crear({
+        numero: document.getElementById('fNumParte').value,
+        tipo: tipoActual, cliente,
+        direccion: document.getElementById('fDireccion').value.trim(),
+        descripcion,
+        horaInicio: document.getElementById('fHoraInicio').value,
+        horaFin: document.getElementById('fHoraFin').value,
+        fecha: document.getElementById('fFecha').value,
+        materiales: [...materials],
+        observaciones: document.getElementById('fObservaciones').value.trim(),
+        operario: document.getElementById('fOperario').value.trim(),
+      });
+      showToast('✓ Parte guardado');
+      limpiarFormulario();
+      switchTab('historial');
+    } catch(err) {
+      showToast('Error: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar parte';
+    }
+  }
+
+  function limpiarFormulario() {
+    ['fCliente','fDireccion','fDescripcion','fHoraInicio','fHoraFin','fObservaciones','fOperario']
+      .forEach(id => document.getElementById(id).value = '');
+    materials = []; renderMaterials();
+    if (timerRunning) { clearInterval(timerInterval); timerRunning = false; }
+    document.getElementById('timerDisplay').textContent = '00:00:00';
+    document.getElementById('timerDisplay').classList.remove('timer-running');
+    document.getElementById('btnIniciar').classList.remove('hidden');
+    document.getElementById('btnFinalizar').classList.add('hidden');
+    document.getElementById('fFecha').value = new Date().toISOString().split('T')[0];
+    cargarNumParte();
+  }
+
+  // ─── Historial ───
+  let buscarTimeout = null;
+  function buscarHistorial() {
+    clearTimeout(buscarTimeout);
+    buscarTimeout = setTimeout(cargarHistorial, 300);
+  }
+  async function cargarHistorial() {
+    const list = document.getElementById('historialList');
+    list.innerHTML = '<div class="loader">Cargando...</div>';
+    try {
+      const params = {
+        search: document.getElementById('searchInput').value.trim(),
+        tipo: document.getElementById('filterTipo').value,
+        fecha_desde: document.getElementById('filterFechaDesde').value,
+        fecha_hasta: document.getElementById('filterFechaHasta').value,
+      };
+      const partes = await api.listar(params);
+      if (!partes.length) {
+        list.innerHTML = '<div class="empty-state">No se encontraron partes</div>';
+        return;
+      }
+      list.innerHTML = partes.map(p => {
+        const t = TIPOS[p.tipo] || TIPOS.fontaneria;
+        const dur = calcDuracion(p.horaInicio, p.horaFin);
+        const fecha = p.fecha ? new Date(p.fecha + 'T12:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}) : '';
+        return `<div class="parte-card" onclick="verDetalle(${p.id})">
+          <div class="parte-header">
+            <div>
+              <div class="parte-title">${p.cliente}</div>
+              <div class="parte-meta">${p.numero} · ${fecha}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <span class="tag ${t.cls}">${t.label}</span>
+              <span class="tag ${p.horaFin ? 'tag-done' : 'tag-progress'}">${p.horaFin ? 'Finalizado' : 'En curso'}</span>
+            </div>
+          </div>
+          <div class="parte-desc">${p.descripcion}</div>
+          <div class="parte-footer">
+            ${p.horaInicio ? `<span>Inicio <strong>${p.horaInicio}</strong></span>` : ''}
+            ${p.horaFin ? `<span>Fin <strong>${p.horaFin}</strong></span>` : ''}
+            ${dur !== '--' ? `<span>Duración <strong>${dur}</strong></span>` : ''}
+            ${p.operario ? `<span>Operario <strong>${p.operario}</strong></span>` : ''}
+            ${p.materiales?.length ? `<span><strong>${p.materiales.length}</strong> material${p.materiales.length>1?'es':''}</span>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    } catch(err) {
+      list.innerHTML = `<div class="empty-state">Error al cargar: ${err.message}</div>`;
+    }
+  }
+
+  async function verDetalle(id) {
+    const list = document.getElementById('historialList');
+    list.innerHTML = '<div class="loader">Cargando...</div>';
+    try {
+      const p = await api.obtener(id);
+      const t = TIPOS[p.tipo] || TIPOS.fontaneria;
+      const dur = calcDuracion(p.horaInicio, p.horaFin);
+      const fecha = p.fecha ? new Date(p.fecha+'T12:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '';
+      list.innerHTML = `
+        <button class="back-btn" onclick="cargarHistorial()">← Volver al historial</button>
+        <div class="detail-panel">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+            <div>
+              <div style="font-size:19px;font-weight:500;margin-bottom:4px;">${p.cliente}</div>
+              <div style="font-size:13px;color:var(--text-sec);">${p.numero} · ${fecha}</div>
+            </div>
+            <span class="tag ${t.cls}" style="font-size:12px;padding:4px 12px;">${t.label}</span>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-cell"><div class="detail-cell-label">Inicio</div><div class="detail-cell-value">${p.horaInicio||'--'}</div></div>
+            <div class="detail-cell"><div class="detail-cell-label">Fin</div><div class="detail-cell-value">${p.horaFin||'--'}</div></div>
+            <div class="detail-cell"><div class="detail-cell-label">Duración</div><div class="detail-cell-value">${dur}</div></div>
+          </div>
+          ${p.direccion ? `<div class="detail-section"><div class="detail-section-title">Dirección</div><div>${p.direccion}</div></div>` : ''}
+          <div class="detail-section"><div class="detail-section-title">Trabajo realizado</div><div style="font-size:14px;white-space:pre-wrap;">${p.descripcion}</div></div>
+          ${p.materiales?.length ? `<div class="detail-section">
+            <div class="detail-section-title">Materiales (${p.materiales.length})</div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:5px;">
+              ${p.materiales.map(m => `<li class="mat-item"><span class="mat-dot"></span>${m}</li>`).join('')}
+            </ul></div>` : ''}
+          ${p.observaciones ? `<div class="detail-section"><div class="detail-section-title">Observaciones</div><div style="font-size:14px;">${p.observaciones}</div></div>` : ''}
+          ${p.operario ? `<div class="detail-section"><div class="detail-section-title">Operario</div><div style="font-size:14px;">${p.operario}</div></div>` : ''}
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+            <button class="btn btn-danger" onclick="eliminarParte(${p.id})">Eliminar parte</button>
+          </div>
+        </div>`;
+    } catch(err) {
+      list.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+    }
+  }
+
+  async function eliminarParte(id) {
+    if (!confirm('¿Eliminar este parte?')) return;
+    try {
+      await api.eliminar(id);
+      showToast('Parte eliminado');
+      cargarHistorial();
+    } catch(err) { showToast('Error: ' + err.message); }
+  }
+
+  // ─── Resumen ───
+  async function cargarResumen() {
+    document.getElementById('statsGrid').innerHTML = '<div class="loader" style="grid-column:1/-1">Cargando...</div>';
+    try {
+      const s = await api.resumen();
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card"><div class="stat-label">Partes totales</div><div class="stat-value">${s.total||0}</div></div>
+        <div class="stat-card"><div class="stat-label">Finalizados</div><div class="stat-value">${s.finalizados||0}</div></div>
+        <div class="stat-card"><div class="stat-label">Materiales usados</div><div class="stat-value">${s.total_materiales||0}</div></div>
+      `;
+      const total = s.total || 1;
+      document.getElementById('statsByTipo').innerHTML = Object.entries(TIPOS).map(([key, info]) => {
+        const count = s[key] || 0;
+        const pct = Math.round(count / total * 100);
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <span class="tag ${info.cls}" style="min-width:148px;">${info.label}</span>
+          <div style="flex:1;height:6px;background:var(--border);border-radius:4px;overflow:hidden;">
+            <div style="height:100%;border-radius:4px;background:var(--blue-mid);width:${pct}%;"></div>
+          </div>
+          <span style="font-size:13px;font-weight:500;min-width:28px;text-align:right;">${count}</span>
+        </div>`;
+      }).join('');
+    } catch(err) {
+      document.getElementById('statsGrid').innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+    }
+  }
+
+  // ─── Voice ───
+  function toggleVoice(targetId, btnId) {
+    if (!SpeechRecognition) { showToast('Voz no disponible en este navegador'); return; }
+    const btn = document.getElementById(btnId);
+    const transcript = document.getElementById('transcript-' + targetId);
+    if (voiceActive && voiceTarget === targetId) { recognition.stop(); return; }
+    if (voiceActive) recognition.stop();
+    voiceTarget = targetId;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES'; recognition.continuous = true; recognition.interimResults = true;
+    recognition.onstart = () => { voiceActive=true; btn.classList.add('recording'); transcript.classList.add('active'); transcript.textContent='Escuchando...'; };
+    recognition.onresult = (e) => {
+      let interim='', final='';
+      for(let i=e.resultIndex;i<e.results.length;i++) {
+        if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+        else interim+=e.results[i][0].transcript;
+      }
+      transcript.textContent=interim||'...';
+      if(final) {
+        const field=document.getElementById(targetId);
+        field.value=(field.value?field.value+' ':'')+final.trim();
+        transcript.textContent='✓ '+final.trim();
+      }
+    };
+    recognition.onend=()=>{ voiceActive=false; btn.classList.remove('recording'); setTimeout(()=>transcript.classList.remove('active'),2000); };
+    recognition.onerror=(e)=>{ voiceActive=false; btn.classList.remove('recording'); if(e.error!=='aborted') showToast('Error voz: '+e.error); setTimeout(()=>transcript.classList.remove('active'),1500); };
+    recognition.start();
+  }
+
+  function toggleVoiceMat() {
+    if (!SpeechRecognition) { showToast('Voz no disponible en este navegador'); return; }
+    const btn = document.getElementById('voiceMatBtn');
+    const transcript = document.getElementById('transcript-mat');
+    if (voiceActive && voiceTarget==='__mat__') { recognition.stop(); return; }
+    if (voiceActive) recognition.stop();
+    voiceTarget='__mat__';
+    let finalText='';
+    recognition=new SpeechRecognition();
+    recognition.lang='es-ES'; recognition.continuous=false; recognition.interimResults=true;
+    recognition.onstart=()=>{ voiceActive=true; btn.classList.add('recording'); transcript.classList.add('active'); transcript.textContent='Di el nombre del material...'; finalText=''; };
+    recognition.onresult=(e)=>{ let interim=''; for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal) finalText+=e.results[i][0].transcript; else interim+=e.results[i][0].transcript;} transcript.textContent=interim||finalText||'...'; };
+    recognition.onend=()=>{ voiceActive=false; btn.classList.remove('recording'); if(finalText.trim()){materials.push(finalText.trim());renderMaterials();transcript.textContent='✓ Añadido: '+finalText.trim();setTimeout(()=>transcript.classList.remove('active'),2000);}else{setTimeout(()=>transcript.classList.remove('active'),1000);} };
+    recognition.onerror=(e)=>{ voiceActive=false; btn.classList.remove('recording'); setTimeout(()=>transcript.classList.remove('active'),1500); };
+    recognition.start();
+  }
+
+  // ─── Toast ───
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  document.getElementById('matInput').addEventListener('keydown', e => { if(e.key==='Enter') addMaterial(); });
+
+  init();
+</script>
+</body>
+</html>
